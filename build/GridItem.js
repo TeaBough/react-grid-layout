@@ -280,6 +280,17 @@ var GridItem = React.createClass({
       pos.height = this.state.resizing.height;
     }
 
+    var style = {
+      left: pos.left + "px",
+      top: pos.top + "px",
+      position: "absolute"
+    };
+
+    if (this.props.isPlaceholder) {
+      style.width = pos.width + "px";
+      style.height = pos.height + "px";
+    }
+
     var child = cloneWithProps(React.Children.only(this.props.children), {
       // Munge a classname. Use passed in classnames and resizing.
       // React with merge the classNames.
