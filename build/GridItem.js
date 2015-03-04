@@ -16,8 +16,9 @@ var GridItem = React.createClass({
   propTypes: {
     // General grid attributes
     cols: React.PropTypes.number.isRequired,
-    containerWidth: React.PropTypes.number.isRequired,
+    rows: React.PropTypes.number.isRequired,
     rowHeight: React.PropTypes.number.isRequired,
+    colWidth: React.PropTypes.number.isRequired,
     margin: React.PropTypes.array.isRequired,
 
     // These are all in grid units
@@ -105,10 +106,11 @@ var GridItem = React.createClass({
    */
   calcPosition: function calcPosition(x, y, w, h) {
     var p = this.props;
-    var width = p.containerWidth - p.margin[0];
+    var width = p.cols * p.colWidth - p.margin[0];
+    var height = p.rows * p.rowHeight - p.margin[1];
     var out = {
       left: width * (x / p.cols) + p.margin[0],
-      top: p.rowHeight * y + p.margin[1],
+      top: height * (y / p.rows) + p.margin[1],
       width: width * (w / p.cols) - p.margin[0],
       height: h * p.rowHeight - p.margin[1]
     };
@@ -128,10 +130,10 @@ var GridItem = React.createClass({
     top = top - this.props.margin[1];
     // This is intentional; because so much of the logic on moving boxes up/down relies
     // on an exact y position, we only round the x, not the y.
-    var x = Math.round(left / this.props.containerWidth * this.props.cols);
+    var x = Math.round(left / this.props.colWidth);
     var y = Math.floor(top / this.props.rowHeight);
     x = Math.max(Math.min(x, this.props.cols), 0);
-    y = Math.max(y, 0);
+    y = Math.max(Math.min(y, this.props.rows), 0);
     return { x: x, y: y };
   },
 
@@ -146,10 +148,10 @@ var GridItem = React.createClass({
     var width = _ref2.width;
     width = width + this.props.margin[0];
     height = height + this.props.margin[1];
-    var w = Math.round(width / this.props.containerWidth * this.props.cols);
+    var w = Math.round(width / this.props.colWidth);
     var h = Math.round(height / this.props.rowHeight);
     w = Math.max(Math.min(w, this.props.cols - this.props.x), 0);
-    h = Math.max(h, 0);
+    h = Math.max(Math.min(h, this.props.rows - this.props.y), 0);
     return { w: w, h: h };
   },
 
@@ -230,6 +232,7 @@ var GridItem = React.createClass({
 
       // Cap x at numCols
       x = Math.min(x, me.props.cols - me.props.w);
+      y = Math.min(y, me.props.rows - me.props.h);
 
       me.props[handlerName](me.props.i, x, y, { e: e, element: element, position: position });
     };

@@ -111,6 +111,8 @@ var utils = module.exports = {
       var l = layout[i];
       // Overflows right
       if (l.x + l.w > bounds.cols) l.x = bounds.cols - l.w;
+      // Overflows bottom
+      if (l.y + l.h > bounds.rows) l.y = bounds.rows - l.h;
       // Overflows left
       if (l.x < 0) {
         l.x = 0;
@@ -248,7 +250,8 @@ var utils = module.exports = {
         x: itemToMove.x,
         y: itemToMove.y,
         w: itemToMove.w,
-        h: itemToMove.h };
+        h: itemToMove.h
+      };
       fakeItem.y = Math.max(collidesWith.y - itemToMove.h, 0);
       if (!utils.getFirstCollision(layout, fakeItem)) {
         return utils.moveElement(layout, itemToMove, undefined, fakeItem.y);
@@ -306,7 +309,7 @@ var utils = module.exports = {
    * @param  {Boolean} verticalCompact    VerticalCompact passed in through props.
    * @return {Array}                Working layout.
    */
-  synchronizeLayoutWithChildren: function synchronizeLayoutWithChildren(initialLayout, children, cols, verticalCompact) {
+  synchronizeLayoutWithChildren: function synchronizeLayoutWithChildren(initialLayout, children, cols, rows, verticalCompact) {
     children = [].concat(children); // ensure 'children' is always an array
     initialLayout = initialLayout || [];
 
@@ -340,7 +343,7 @@ var utils = module.exports = {
     }
 
     // Correct the layout.
-    layout = utils.correctBounds(layout, { cols: cols });
+    layout = utils.correctBounds(layout, { cols: cols, rows: rows });
     layout = utils.compact(layout, verticalCompact);
 
     return layout;

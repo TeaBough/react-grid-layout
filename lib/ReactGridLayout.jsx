@@ -16,10 +16,11 @@ var ReactGridLayout = React.createClass({
     // Basic props
     //
 
-    // If true, the container height swells and contracts to fit contents
-    autoSize: React.PropTypes.bool,
     // # of cols.
     cols: React.PropTypes.number,
+
+    // # of rows
+    rows: React.PropTypes.number,
 
     // A selector that will not be draggable.
     draggableCancel: React.PropTypes.string,
@@ -48,6 +49,8 @@ var ReactGridLayout = React.createClass({
     margin: React.PropTypes.array,
     // Rows have a static height, but you can change this based on breakpoints if you like
     rowHeight: React.PropTypes.number,
+
+    colWidth: React.PropTypes.number,
 
     //
     // Flags
@@ -101,9 +104,10 @@ var ReactGridLayout = React.createClass({
 
   getDefaultProps() {
     return {
-      autoSize: true,
-      cols: 12, 
-      rowHeight: 150,
+      cols: 12,
+      rows: 10,
+      rowHeight: 50,
+      colWidth: 50,
       layout: [],
       margin: [10, 10],
       isDraggable: true,
@@ -122,8 +126,9 @@ var ReactGridLayout = React.createClass({
 
   getInitialState() {
     return {
-      layout: utils.synchronizeLayoutWithChildren(this.props.layout, this.props.children, this.props.cols, this.props.verticalCompact),
-      width: this.props.initialWidth,
+      layout: utils.synchronizeLayoutWithChildren(this.props.layout, this.props.children, this.props.cols, this.props.rows, this.props.verticalCompact),
+      width: this.props.colWidth * this.props.cols,
+      height: this.props.rowHeight * this.props.rows,
       activeDrag: null
     };
   },
@@ -139,17 +144,19 @@ var ReactGridLayout = React.createClass({
     // Use manual width changes in combination with `listenToWindowResize: false`
     if (nextProps.width !== this.props.width) this.onWidthChange(nextProps.width);
 
+    if (nextProps.height !== this.props.height) this.onHeightChange(nextProps.height);
+
     // If children change, regenerate the layout.
     if (nextProps.children.length !== this.props.children.length) {
       this.setState({
-        layout: utils.synchronizeLayoutWithChildren(this.state.layout, nextProps.children, nextProps.cols, this.props.verticalCompact)
+        layout: utils.synchronizeLayoutWithChildren(this.state.layout, nextProps.children, nextProps.cols, nextProps.rows, this.props.verticalCompact)
       });
     }
 
     // Allow parent to set layout directly.
     if (nextProps.layout && JSON.stringify(nextProps.layout) !== JSON.stringify(this.state.layout)) {
       this.setState({
-        layout: utils.synchronizeLayoutWithChildren(nextProps.layout, nextProps.children, nextProps.cols, this.props.verticalCompact)
+        layout: utils.synchronizeLayoutWithChildren(nextProps.layout, nextProps.children, nextProps.cols, nextProps.rows, this.props.verticalCompact)
       });
     }
   },
@@ -167,8 +174,7 @@ var ReactGridLayout = React.createClass({
    * @return {String} Container height in pixels.
    */
   containerHeight() {
-    if (!this.props.autoSize) return;
-    return utils.bottom(this.state.layout) * this.props.rowHeight + this.props.margin[1] + 'px';
+    return;
   },
 
   /**
@@ -176,6 +182,10 @@ var ReactGridLayout = React.createClass({
    */
   onWidthChange(width) {
     this.setState({width: width});
+  },
+
+  onHeightChange(height) {
+    this.setState({height: height});
   },
 
   /**
@@ -305,10 +315,11 @@ var ReactGridLayout = React.createClass({
         i={this.state.activeDrag.i}
         isPlaceholder={true}
         className="react-grid-placeholder"
-        containerWidth={this.state.width}
         cols={this.props.cols}
+        rows={this.props.rows}
         margin={this.props.margin}
         rowHeight={this.props.rowHeight}
+        colWidth={this.props.colWidth}
         isDraggable={false}
         isResizable={false}
         useCSSTransforms={this.props.useCSSTransforms}
@@ -340,10 +351,11 @@ var ReactGridLayout = React.createClass({
 
     return (
       <GridItem 
-        containerWidth={this.state.width}
         cols={this.props.cols}
+        rows={this.props.rows}
         margin={this.props.margin}
         rowHeight={this.props.rowHeight}
+        colWidth={this.props.colWidth}
         moveOnStartChange={moveOnStartChange}
         cancel={this.props.draggableCancel}
         handle={this.props.draggableHandle}
@@ -369,8 +381,11 @@ var ReactGridLayout = React.createClass({
     var {className, ...props} = this.props;
     className = 'react-grid-layout ' + (className || '');
 
+    var height = this.props.rows * this.props.rowHeight;
+    var width = this.props.cols * this.props.colWidth;
+
     return (
-      <div {...props} className={className} style={{height: this.containerHeight()}}>
+      <div {...props} className={className} style={{height: height, width: width}}>
         {React.Children.map(this.props.children, this.processGridItem)}
         {this.placeholder()}
       </div>
