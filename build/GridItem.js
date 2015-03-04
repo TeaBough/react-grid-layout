@@ -294,15 +294,7 @@ var GridItem = React.createClass({
     var child = cloneWithProps(React.Children.only(this.props.children), {
       // Munge a classname. Use passed in classnames and resizing.
       // React with merge the classNames.
-      className: ["react-grid-item", this.props.className, this.state.resizing ? "resizing" : "", this.props.useCSSTransforms ? "cssTransforms" : ""].join(" "),
-      // We can set the width and height on the child, but unfortunately we can't set the position.
-      style: {
-        width: pos.width + "px",
-        height: pos.height + "px",
-        left: pos.left + "px",
-        top: pos.top + "px",
-        position: "absolute"
-      }
+      className: ["react-grid-item", this.props.className, this.state.resizing ? "resizing" : "", this.props.useCSSTransforms ? "cssTransforms" : ""].join(" "), style: style
     });
 
     // This is where we set the grid item's absolute placement. It gets a little tricky because we want to do it
