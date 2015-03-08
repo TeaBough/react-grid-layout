@@ -19,7 +19,7 @@ var GridItem = React.createClass({
     rowHeight: React.PropTypes.number.isRequired,
     colWidth: React.PropTypes.number.isRequired,
     margin: React.PropTypes.array.isRequired,
-    
+
     // These are all in grid units
     x: React.PropTypes.number.isRequired,
     y: React.PropTypes.number.isRequired,
@@ -49,7 +49,7 @@ var GridItem = React.createClass({
 
     // If true, item will be repositioned when x/y/w/h change
     moveOnStartChange: React.PropTypes.bool,
-    
+
     // Functions
     onDragStop: React.PropTypes.func,
     onDragStart: React.PropTypes.func,
@@ -160,7 +160,7 @@ var GridItem = React.createClass({
     return (
       <Draggable
         start={{x: position.left, y: position.top}}
-        moveOnStartChange={this.props.moveOnStartChange} 
+        moveOnStartChange={this.props.moveOnStartChange}
         onStop={this.onDragHandler('onDragStop')}
         onStart={this.onDragHandler('onDragStart')}
         onDrag={this.onDragHandler('onDrag')}
@@ -187,7 +187,7 @@ var GridItem = React.createClass({
     // Calculate min/max constraints using our min & maxes
     var mins = this.calcPosition(0, 0, p.minW, p.minH);
     var maxes = this.calcPosition(0, 0, p.maxW, p.maxH);
-    var minConstraints = [mins.width, mins.height]; 
+    var minConstraints = [mins.width, mins.height];
     var maxConstraints = [Math.min(maxes.width, maxWidth), Math.min(maxes.height, Infinity)];
     return (
       <Resizable
@@ -206,9 +206,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -229,9 +229,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -304,7 +304,7 @@ var GridItem = React.createClass({
       delete child.props.style.top;
     }
 
-    // Resizable support. This is usually on but the user can toggle it off. 
+    // Resizable support. This is usually on but the user can toggle it off.
     if (this.props.isResizable) {
       child = this.mixinResizable(child, pos);
     }
@@ -312,7 +312,7 @@ var GridItem = React.createClass({
     // Draggable support. This is always on, except for with placeholders.
     if (this.props.isDraggable) {
       child = this.mixinDraggable(child, pos);
-    } 
+    }
 
     return child;
   }
@@ -320,7 +320,7 @@ var GridItem = React.createClass({
 
 function constraintError(name, props) {
   delete props.children;
-  throw new Error(name + ' overrides contraints on gridItem ' + props.i + '. Full props: ' + JSON.stringify(props)); 
+  throw new Error(name + ' overrides contraints on gridItem ' + props.i + '. Full props: ' + JSON.stringify(props));
 }
 
 module.exports = GridItem;
