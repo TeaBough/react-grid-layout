@@ -261,7 +261,6 @@ var utils = module.exports = {
         fakeItem.y = Math.max(collidesWith.y - itemToMove.h, 0);
       }
 
-      fakeItem.y = Math.max(collidesWith.y - itemToMove.h, 0);
       if (!utils.getFirstCollision(layout, fakeItem)) {
         return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact);
       }
