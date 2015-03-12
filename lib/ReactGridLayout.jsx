@@ -225,7 +225,7 @@ var ReactGridLayout = React.createClass({
     };
 
     // Move the element to the dragged location.
-    layout = utils.moveElement(layout, l, x, y, true /* isUserAction */);
+    layout = utils.moveElement(layout, l, x, y, true /* isUserAction */,this.props.verticalCompact);
 
     this.props.onDrag(layout, oldL, l, placeholder, e);
 
@@ -252,7 +252,7 @@ var ReactGridLayout = React.createClass({
     var oldL = utils.clone(l);
 
     // Move the element here
-    layout = utils.moveElement(layout, l, x, y, true /* isUserAction */);
+    layout = utils.moveElement(layout, l, x, y, true /* isUserAction */,this.props.verticalCompact);
 
     this.props.onDragStop(layout, oldL, l, null, e);
 
