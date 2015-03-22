@@ -266,13 +266,13 @@ var utils = module.exports = {
       }
 
       if (!utils.getFirstCollision(layout, fakeItem)) {
-        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact, collisionCopy);
+        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, true, verticalCompact, collisionCopy);
       }
     }
 
     // Previously this was optimized to move below the collision directly, but this can cause problems
     // with cascading moves, as an item may actually leapflog a collision and cause a reversal in order.
-    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, verticalCompact, collisionCopy);
+    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, false, verticalCompact, collisionCopy);
   },
 
   /**
