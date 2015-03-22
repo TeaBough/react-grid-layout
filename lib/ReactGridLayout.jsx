@@ -214,7 +214,7 @@ var ReactGridLayout = React.createClass({
 			var firstCollision = utils.getFirstCollision(layout,collision);
 			if (firstCollision === undefined){
 				var l = utils.getLayoutItem(layout, collision.i);
-				utils.moveElement(layout, l, collision.x, collision.y, true, verticalCompact);
+				utils.moveElement(layout, l, collision.x, collision.y, true, verticalCompact, collisions);
 				collisions = _.filter(collisions, function(elem) {
 					return elem.id !== collision.id;
 				});
@@ -265,7 +265,7 @@ var ReactGridLayout = React.createClass({
 		this.checkPreviousCollisions(layout);
 
 		// Move the element to the dragged location.
-		var layoutAndCollisions = utils.moveElement(layout, l, x, y, true, /* isUserAction */this.props.verticalCompact);
+		var layoutAndCollisions = utils.moveElement(layout, l, x, y, true, /* isUserAction */this.props.verticalCompact, this.state.collisions);
 
 		var newCollisions = this.addNewCollisions(layoutAndCollisions.collisions, this.state.collisions);
 
@@ -297,7 +297,7 @@ var ReactGridLayout = React.createClass({
 		var oldL = utils.clone(l);
 
 		// Move the element here
-		layout = utils.moveElement(layout, l, x, y, true /* isUserAction */,this.props.verticalCompact).layout;
+		layout = utils.moveElement(layout, l, x, y, true /* isUserAction */,this.props.verticalCompact, this.state.collisions).layout;
 
 		this.props.onDragStop(layout, oldL, l, null, e);
 

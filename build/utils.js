@@ -189,8 +189,10 @@ var utils = module.exports = {
    *                                     being dragged/resized by th euser.
    * @param  {Boolean} verticalCompact    VerticalCompact passed in through props.
    */
-  moveElement: function moveElement(layout, l, x, y, isUserAction, verticalCompact) {
+  moveElement: function moveElement(layout, l, x, y, isUserAction, verticalCompact, collisionCopy) {
     if (l["static"]) return { layout: layout, collisions: [] };
+
+    var layoutAndCollisions = { layout: layout, collisions: collisionCopy };
 
     // Short-circuit if nothing to do.
     if (l.y === y && l.x === x) return { layout: layout, collisions: [] };
@@ -209,11 +211,10 @@ var utils = module.exports = {
     if (movingUp) sorted = sorted.reverse();
     var collisions = utils.getAllCollisions(sorted, l);
 
-    var collisionsCopy = [];
     // Move each item that collides away from this element.
     for (var i = 0, len = collisions.length; i < len; i++) {
       var collision = collisions[i];
-      collisionsCopy.push(assign({}, collision));
+      collisionCopy.push(assign({}, collision));
       // console.log('resolving collision between', l.i, 'at', l.y, 'and', collision.i, 'at', collision.y);
 
       // Short circuit so we can't infinite loop
@@ -224,13 +225,14 @@ var utils = module.exports = {
 
       // Don't move static items - we have to move *this* element away
       if (collision["static"]) {
-        layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact);
+        layoutAndCollisions = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact, collisionCopy);
       } else {
-        layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact);
+        layoutAndCollisions = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact, collisionCopy);
       }
+      layout = layoutAndCollisions.layout;
     }
 
-    return { layout: layout, collisions: collisionsCopy };
+    return { layout: layout, collisions: collisionCopy };
   },
 
   /**
@@ -244,7 +246,7 @@ var utils = module.exports = {
    *                                   by the user.
    * @param  {Boolean} verticalCompact    VerticalCompact passed in through props.
    */
-  moveElementAwayFromCollision: function moveElementAwayFromCollision(layout, collidesWith, itemToMove, isUserAction, verticalCompact) {
+  moveElementAwayFromCollision: function moveElementAwayFromCollision(layout, collidesWith, itemToMove, isUserAction, verticalCompact, collisionCopy) {
     // If there is enough space above the collision to put this element, move it there.
     // We only do this on the main collision as this can get funky in cascades and cause
     // unwanted swapping behavior.
@@ -264,13 +266,13 @@ var utils = module.exports = {
       }
 
       if (!utils.getFirstCollision(layout, fakeItem)) {
-        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact).layout;
+        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact, collisionCopy);
       }
     }
 
     // Previously this was optimized to move below the collision directly, but this can cause problems
     // with cascading moves, as an item may actually leapflog a collision and cause a reversal in order.
-    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, verticalCompact).layout;
+    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, verticalCompact, collisionCopy);
   },
 
   /**
