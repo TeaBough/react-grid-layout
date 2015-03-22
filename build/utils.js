@@ -190,10 +190,10 @@ var utils = module.exports = {
    * @param  {Boolean} verticalCompact    VerticalCompact passed in through props.
    */
   moveElement: function moveElement(layout, l, x, y, isUserAction, verticalCompact) {
-    if (l["static"]) return layout;
+    if (l["static"]) return { layout: layout, collisions: [] };
 
     // Short-circuit if nothing to do.
-    if (l.y === y && l.x === x) return layout;
+    if (l.y === y && l.x === x) return { layout: layout, collisions: [] };
 
     var movingUp = l.y > y;
     // This is quite a bit faster than extending the object
@@ -209,9 +209,11 @@ var utils = module.exports = {
     if (movingUp) sorted = sorted.reverse();
     var collisions = utils.getAllCollisions(sorted, l);
 
+    var collisionsCopy = [];
     // Move each item that collides away from this element.
     for (var i = 0, len = collisions.length; i < len; i++) {
       var collision = collisions[i];
+      collisionsCopy.push(assign({}, collision));
       // console.log('resolving collision between', l.i, 'at', l.y, 'and', collision.i, 'at', collision.y);
 
       // Short circuit so we can't infinite loop
@@ -222,13 +224,13 @@ var utils = module.exports = {
 
       // Don't move static items - we have to move *this* element away
       if (collision["static"]) {
-        layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact);
+        layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact).layout;
       } else {
-        layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact);
+        layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact).layout;
       }
     }
 
-    return layout;
+    return { layout: layout, collisions: collisionsCopy };
   },
 
   /**
@@ -262,13 +264,13 @@ var utils = module.exports = {
       }
 
       if (!utils.getFirstCollision(layout, fakeItem)) {
-        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact);
+        return utils.moveElement(layout, itemToMove, undefined, fakeItem.y, verticalCompact).layout;
       }
     }
 
     // Previously this was optimized to move below the collision directly, but this can cause problems
     // with cascading moves, as an item may actually leapflog a collision and cause a reversal in order.
-    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, verticalCompact);
+    return utils.moveElement(layout, itemToMove, undefined, itemToMove.y + 1, verticalCompact).layout;
   },
 
   /**

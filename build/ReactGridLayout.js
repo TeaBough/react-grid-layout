@@ -13,6 +13,7 @@ var _objectWithoutProperties = function (obj, keys) {
 
 var React = require("react");
 var GridItem = require("./GridItem");
+var _ = require("lodash");
 var utils = require("./utils");
 var PureDeepRenderMixin = require("./mixins/PureDeepRenderMixin");
 var WidthListeningMixin = require("./mixins/WidthListeningMixin");
@@ -142,6 +143,7 @@ var ReactGridLayout = React.createClass({
       layout: utils.synchronizeLayoutWithChildren(this.props.layout, this.props.children, this.props.cols, this.props.rows, this.props.verticalCompact),
       width: this.props.colWidth * this.props.cols,
       height: this.props.rowHeight * this.props.rows,
+      collisions: [],
       activeDrag: null
     };
   },
@@ -220,6 +222,41 @@ var ReactGridLayout = React.createClass({
     // No need to clone, `l` hasn't changed.
     this.props.onDragStart(layout, l, l, null, e);
   },
+
+  checkPreviousCollisions: function (layout) {
+    var collisions = this.state.collisions;
+    _.forEach(collisions, function (collision) {
+      var firstCollision = utils.getFirstCollision(layout, collision);
+      if (firstCollision === undefined) {
+        var l = utils.getLayoutItem(layout, collision.i);
+        utils.moveElement(layout, l, collision.x, collision.y, true, this.props.verticalCompact);
+        var collisionsWithoutTheOneResolved = _.filter(collisions, function (elem) {
+          return elem.id !== collision.id;
+        });
+        this.setState({
+          layout: utils.compact(layout, this.props.verticalCompact),
+          collisions: collisionsWithoutTheOneResolved
+        });
+      }
+    });
+  },
+
+  addNewCollisions: function (newCollisions, oldCollisions) {
+    var relevantCollisions = [];
+
+    _.forEach(newCollisions, function (collision) {
+      var result = _.findIndex(oldCollisions, function (elem) {
+        return collision.id === elem.id;
+      });
+      if (result === -1) {
+        relevantCollisions.push(collision);
+      }
+    });
+    return relevantCollisions;
+  },
+
+
+
   /**
    * Each drag movement create a new dragelement and move the element to the dragged location
    * @param {Number} i Index of the child
@@ -227,7 +264,7 @@ var ReactGridLayout = React.createClass({
    * @param {Number} y Y position of the move
    * @param {Event} e The mousedown event
    * @param {Element} element The current dragging DOM element
-   * @param {Object} position Drag information   
+   * @param {Object} position Drag information
    */
   onDrag: function onDrag(i, x, y, _ref2) {
     var e = _ref2.e;
@@ -243,14 +280,21 @@ var ReactGridLayout = React.createClass({
       w: l.w, h: l.h, x: l.x, y: l.y, placeholder: true, i: i
     };
 
+    this.checkPreviousCollisions(layout);
+
     // Move the element to the dragged location.
-    layout = utils.moveElement(layout, l, x, y, true, /* isUserAction */this.props.verticalCompact);
+    var layoutAndCollisions = utils.moveElement(layout, l, x, y, true, /* isUserAction */this.props.verticalCompact);
+
+    var newCollisions = this.addNewCollisions(layoutAndCollisions.collisions, this.state.collisions);
+
+    layout = layoutAndCollisions.layout;
 
     this.props.onDrag(layout, oldL, l, placeholder, e);
 
 
     this.setState({
       layout: utils.compact(layout, this.props.verticalCompact),
+      collisions: this.state.collisions.concat(newCollisions),
       activeDrag: placeholder
     });
   },
@@ -279,7 +323,7 @@ var ReactGridLayout = React.createClass({
     this.props.onDragStop(layout, oldL, l, null, e);
 
     // Set state
-    this.setState({ layout: utils.compact(layout, this.props.verticalCompact), activeDrag: null });
+    this.setState({ layout: utils.compact(layout, this.props.verticalCompact), activeDrag: null, collisions: [] });
   },
 
   onResizeStart: function onResizeStart(i, w, h, _ref4) {
