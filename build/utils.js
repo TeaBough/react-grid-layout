@@ -1,6 +1,7 @@
 "use strict";
 
 var assign = require("object-assign");
+var _ = require("lodash");
 
 var utils = module.exports = {
 
@@ -212,16 +213,20 @@ var utils = module.exports = {
     var collisions = utils.getAllCollisions(sorted, l);
 
     // Move each item that collides away from this element.
-    for (var i = 0, len = collisions.length; i < len; i++) {
-      var collision = collisions[i];
-      collisionCopy.push(assign({}, collision));
+    _.forEach(collisions, function (collision) {
+      var result = _.findIndex(collisionCopy, function (elem) {
+        return collision.id === elem.id;
+      });
+      if (result === -1) {
+        collisionCopy.push(assign({}, collision));
+      }
       // console.log('resolving collision between', l.i, 'at', l.y, 'and', collision.i, 'at', collision.y);
 
       // Short circuit so we can't infinite loop
-      if (collision.moved) continue;
+      if (collision.moved) return;
 
       // This makes it feel a bit more precise by waiting to swap for just a bit when moving up.
-      if (l.y > collision.y && l.y - collision.y > collision.h / 4) continue;
+      if (l.y > collision.y && l.y - collision.y > collision.h / 4) return;
 
       // Don't move static items - we have to move *this* element away
       if (collision["static"]) {
@@ -230,8 +235,7 @@ var utils = module.exports = {
         layoutAndCollisions = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact, collisionCopy);
       }
       layout = layoutAndCollisions.layout;
-    }
-
+    });
     return { layout: layout, collisions: collisionCopy };
   },
 
