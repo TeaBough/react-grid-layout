@@ -224,9 +224,9 @@ var utils = module.exports = {
 
       // Don't move static items - we have to move *this* element away
       if (collision["static"]) {
-        layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact).layout;
+        layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction, verticalCompact);
       } else {
-        layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact).layout;
+        layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction, verticalCompact);
       }
     }
 
