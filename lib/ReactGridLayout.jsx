@@ -211,7 +211,13 @@ var ReactGridLayout = React.createClass({
 		var collisions = this.state.collisions;
     var verticalCompact = this.props.verticalCompact;
 		_.forEach(collisions, function(collision) {
-			var firstCollision = utils.getFirstCollision(layout,collision);
+
+      var layoutWithoutCollisionElement = _.filter(layout, function(elem){
+        return (elem.id !== collision.id);
+      });
+
+      var firstCollision = utils.getFirstCollision(layoutWithoutCollisionElement, collision);
+
 			if (firstCollision === undefined){
 				var l = utils.getLayoutItem(layout, collision.i);
 				utils.moveElement(layout, l, collision.x, collision.y, true, verticalCompact, collisions);
