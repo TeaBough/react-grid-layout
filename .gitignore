@@ -1,5 +1,6 @@
 node_modules
-dist/
+dist/*
+!dist/react-grid-layout.min*
 npm-debug.log
 *.iml
 build/
