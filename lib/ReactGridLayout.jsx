@@ -131,6 +131,7 @@ var ReactGridLayout = React.createClass({
 			width: this.props.colWidth * this.props.cols,
 			height: this.props.rowHeight * this.props.rows,
 			collisions:[],
+      isMounted: false,
 			activeDrag: null
 		};
 	},
@@ -139,6 +140,7 @@ var ReactGridLayout = React.createClass({
 		// Call back with layout on mount. This should be done after correcting the layout width
 		// to ensure we don't rerender with the wrong width.
 		this.props.onLayoutChange(this.state.layout);
+    this.setState({isMounted: true});
 	},
 
 	componentWillReceiveProps(nextProps) {
@@ -418,8 +420,8 @@ var ReactGridLayout = React.createClass({
 				onResizeStop={this.onResizeStop}
 				isDraggable={draggable}
 				isResizable={resizable}
-				useCSSTransforms={this.props.useCSSTransforms && this.isMounted()}
-				usePercentages={!this.isMounted()}
+        useCSSTransforms={this.props.useCSSTransforms && this.state.isMounted}
+        usePercentages={!this.state.isMounted}
 				{...l}
 				>
 				{child}
