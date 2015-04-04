@@ -4,7 +4,7 @@ module.exports = {
     context: __dirname,
     entry: [
       "webpack-dev-server/client?http://localhost:4002",
-      "webpack/hot/dev-server", 
+      "webpack/hot/dev-server",
       "./test/dev-hook.jsx",
     ],
     output: {
@@ -14,7 +14,7 @@ module.exports = {
     },
     module: {
       loaders: [
-        {test: /\.jsx?$/, exclude: /node_modules/, loader: '6to5-loader?experimental=true'},
+        {test: /\.jsx?$/, exclude: /node_modules/, loader: 'babel-loader?stage=0'},
         {test: /\.jsx$/, exclude: /node_modules/, loader: 'react-hot-loader'}
       ]
     },
@@ -27,7 +27,7 @@ module.exports = {
       }),
     ],
     debug: true,
-    devtool: "#inline-source-map",
+    devtool: 'eval',
     publicPath: '/examples/',
     resolve: {
       extensions: ["", ".webpack.js", ".web.js", ".js", ".jsx"],

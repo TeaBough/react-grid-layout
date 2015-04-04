@@ -1,19 +1,23 @@
-"use strict";
-var React = require("react");
-var cloneWithProps = require("react/lib/cloneWithProps");
-var utils = require("./utils");
-var Draggable = require("react-draggable");
-var Resizable = require("react-resizable").Resizable;
-var PureDeepRenderMixin = require("./mixins/PureDeepRenderMixin");
+'use strict';
+var React = require('react');
+var cloneWithProps = require('react/lib/cloneWithProps');
+var utils = require('./utils');
+var Draggable = require('react-draggable');
+var Resizable = require('react-resizable').Resizable;
+var PureDeepRenderMixin = require('./mixins/PureDeepRenderMixin');
 
 /**
  * An individual item within a ReactGridLayout.
  */
 var GridItem = React.createClass({
-  displayName: "GridItem",
+  displayName: 'GridItem',
+
   mixins: [PureDeepRenderMixin],
 
   propTypes: {
+    // Children must be only a single element
+    children: React.PropTypes.element,
+
     // General grid attributes
     cols: React.PropTypes.number.isRequired,
     rows: React.PropTypes.number.isRequired,
@@ -28,21 +32,21 @@ var GridItem = React.createClass({
     h: React.PropTypes.number.isRequired,
 
     // All optional
-    minW: function (props, propName, componentName) {
+    minW: function minW(props, propName, componentName) {
       React.PropTypes.number.apply(this, arguments);
-      if (props.minW > props.w || props.minW > props.maxW) constraintError("minW", props);
+      if (props.minW > props.w || props.minW > props.maxW) constraintError('minW', props);
     },
-    maxW: function (props, propName, componentName) {
+    maxW: function maxW(props, propName, componentName) {
       React.PropTypes.number.apply(this, arguments);
-      if (props.maxW < props.w || props.maxW < props.minW) constraintError("maxW", props);
+      if (props.maxW < props.w || props.maxW < props.minW) constraintError('maxW', props);
     },
-    minH: function (props, propName, componentName) {
+    minH: function minH(props, propName, componentName) {
       React.PropTypes.number.apply(this, arguments);
-      if (props.minH > props.h || props.minH > props.maxH) constraintError("minH", props);
+      if (props.minH > props.h || props.minH > props.maxH) constraintError('minH', props);
     },
-    maxH: function (props, propName, componentName) {
+    maxH: function maxH(props, propName, componentName) {
       React.PropTypes.number.apply(this, arguments);
-      if (props.maxH < props.h || props.maxH < props.minH) constraintError("maxH", props);
+      if (props.maxH < props.h || props.maxH < props.minH) constraintError('maxH', props);
     },
 
     // ID is nice to have for callbacks
@@ -79,8 +83,8 @@ var GridItem = React.createClass({
       isDraggable: true,
       isResizable: true,
       useCSSTransforms: true,
-      className: "",
-      cancel: "",
+      className: '',
+      cancel: '',
       minH: 1,
       minW: 1,
       maxH: Infinity,
@@ -91,7 +95,7 @@ var GridItem = React.createClass({
   getInitialState: function getInitialState() {
     return {
       resizing: false,
-      className: ""
+      className: ''
     };
   },
 
@@ -126,6 +130,7 @@ var GridItem = React.createClass({
   calcXY: function calcXY(_ref) {
     var left = _ref.left;
     var top = _ref.top;
+
     left = left - this.props.margin[0];
     top = top - this.props.margin[1];
     // This is intentional; because so much of the logic on moving boxes up/down relies
@@ -146,6 +151,7 @@ var GridItem = React.createClass({
   calcWH: function calcWH(_ref2) {
     var height = _ref2.height;
     var width = _ref2.width;
+
     width = width + this.props.margin[0];
     height = height + this.props.margin[1];
     var w = Math.round(width / this.props.colWidth);
@@ -153,6 +159,42 @@ var GridItem = React.createClass({
     w = Math.max(Math.min(w, this.props.cols - this.props.x), 0);
     h = Math.max(Math.min(h, this.props.rows - this.props.y), 0);
     return { w: w, h: h };
+  },
+
+  /**
+   * This is where we set the grid item's absolute placement. It gets a little tricky because we want to do it
+   * well when server rendering, and the only way to do that properly is to use percentage width/left because
+   * we don't know exactly what the browser viewport is.
+   * Unfortunately, CSS Transforms, which are great for performance, break in this instance because a percentage
+   * left is relative to the item itself, not its container! So we cannot use them on the server rendering pass.
+   *
+   * @param  {Object} pos Position object with width, height, left, top.
+   * @return {Object}     Style object.
+   */
+  createStyle: function createStyle(pos) {
+    var style = {
+      width: pos.width + 'px',
+      height: pos.height + 'px',
+      left: pos.left + 'px',
+      top: pos.top + 'px',
+      position: 'absolute'
+    };
+
+    // This is used for server rendering.
+    if (this.props.usePercentages) {
+      pos.left = utils.perc(pos.left / this.props.containerWidth);
+      style.left = pos.left;
+      style.width = utils.perc(pos.width / this.props.containerWidth);
+    }
+
+    // CSS Transforms support
+    if (this.props.useCSSTransforms) {
+      utils.setTransform(style, [pos.left, pos.top]);
+      delete style.left;
+      delete style.top;
+    }
+
+    return style;
   },
 
   /**
@@ -167,11 +209,11 @@ var GridItem = React.createClass({
       {
         start: { x: position.left, y: position.top },
         moveOnStartChange: this.props.moveOnStartChange,
-        onStop: this.onDragHandler("onDragStop"),
-        onStart: this.onDragHandler("onDragStart"),
-        onDrag: this.onDragHandler("onDrag"),
+        onStop: this.onDragHandler('onDragStop'),
+        onStart: this.onDragHandler('onDragStart'),
+        onDrag: this.onDragHandler('onDrag'),
         handle: this.props.handle,
-        cancel: ".react-resizable-handle " + this.props.cancel,
+        cancel: '.react-resizable-handle ' + this.props.cancel,
         useCSSTransforms: this.props.useCSSTransforms
       },
       child
@@ -201,9 +243,9 @@ var GridItem = React.createClass({
         height: position.height,
         minConstraints: minConstraints,
         maxConstraints: maxConstraints,
-        onResizeStop: this.onResizeHandler("onResizeStop"),
-        onResizeStart: this.onResizeHandler("onResizeStart"),
-        onResize: this.onResizeHandler("onResize")
+        onResizeStop: this.onResizeHandler('onResizeStop'),
+        onResizeStart: this.onResizeHandler('onResizeStart'),
+        onResize: this.onResizeHandler('onResize')
       },
       child
     );
@@ -211,9 +253,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -222,13 +264,14 @@ var GridItem = React.createClass({
     return function (e, _ref3) {
       var element = _ref3.element;
       var position = _ref3.position;
+
       if (!me.props[handlerName]) return;
       // Get new XY
+
       var _me$calcXY = me.calcXY(position);
 
       var x = _me$calcXY.x;
       var y = _me$calcXY.y;
-
 
       // Cap x at numCols
       x = Math.min(x, me.props.cols - me.props.w);
@@ -240,9 +283,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -251,14 +294,15 @@ var GridItem = React.createClass({
     return function (e, _ref4) {
       var element = _ref4.element;
       var size = _ref4.size;
+
       if (!me.props[handlerName]) return;
 
       // Get new XY
+
       var _me$calcWH = me.calcWH(size);
 
       var w = _me$calcWH.w;
       var h = _me$calcWH.h;
-
 
       // Cap w at numCols
       w = Math.min(w, me.props.cols - me.props.x);
@@ -269,7 +313,7 @@ var GridItem = React.createClass({
       w = Math.max(Math.min(w, me.props.maxW), me.props.minW);
       h = Math.max(Math.min(h, me.props.maxH), me.props.minH);
 
-      me.setState({ resizing: handlerName === "onResizeStop" ? null : size });
+      me.setState({ resizing: handlerName === 'onResizeStop' ? null : size });
 
       me.props[handlerName](me.props.i, w, h, { e: e, element: element, size: size });
     };
@@ -284,42 +328,24 @@ var GridItem = React.createClass({
     }
 
     var style = {
-      left: pos.left + "px",
-      top: pos.top + "px",
-      position: "absolute"
+      left: pos.left + 'px',
+      top: pos.top + 'px',
+      position: 'absolute'
     };
 
     if (this.props.isPlaceholder) {
-      style.width = pos.width + "px";
-      style.height = pos.height + "px";
+      style.width = pos.width + 'px';
+      style.height = pos.height + 'px';
     }
 
-    var child = cloneWithProps(React.Children.only(this.props.children), {
+    // Create the child element. We clone the existing element but modify its className and style.
+    var child = cloneWithProps(this.props.children, {
       // Munge a classname. Use passed in classnames and resizing.
       // React with merge the classNames.
-      className: ["react-grid-item", this.props.className, this.state.resizing ? "resizing" : "", this.props.useCSSTransforms ? "cssTransforms" : ""].join(" "), style: style
+      className: ['react-grid-item', this.props.className, this.state.resizing ? 'resizing' : '', this.props.useCSSTransforms ? 'cssTransforms' : ''].join(' '),
+      // We can set the width and height on the child, but unfortunately we can't set the position.
+      style: this.createStyle(pos)
     });
-
-    // This is where we set the grid item's absolute placement. It gets a little tricky because we want to do it
-    // well when server rendering, and the only way to do that properly is to use percentage width/left because
-    // we don't know exactly what the browser viewport is.
-    //
-    // Unfortunately, CSS Transforms, which are great for performance, break in this instance because a percentage
-    // left is relative to the item itself, not its container! So we cannot use them on the server rendering pass.
-
-    // This is used for server rendering.
-    if (this.props.usePercentages) {
-      pos.left = utils.perc(pos.left / p.containerWidth);
-      child.props.style.left = pos.left;
-      child.props.style.width = utils.perc(pos.width / p.containerWidth);
-    }
-
-    // CSS Transforms support
-    if (this.props.useCSSTransforms) {
-      utils.setTransform(child.props.style, [pos.left, pos.top]);
-      delete child.props.style.left;
-      delete child.props.style.top;
-    }
 
     // Resizable support. This is usually on but the user can toggle it off.
     if (this.props.isResizable) {
@@ -337,7 +363,7 @@ var GridItem = React.createClass({
 
 function constraintError(name, props) {
   delete props.children;
-  throw new Error(name + " overrides contraints on gridItem " + props.i + ". Full props: " + JSON.stringify(props));
+  throw new Error(name + ' overrides contraints on gridItem ' + props.i + '. Full props: ' + JSON.stringify(props));
 }
 
 module.exports = GridItem;

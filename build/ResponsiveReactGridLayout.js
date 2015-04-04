@@ -1,28 +1,22 @@
-"use strict";
-var _objectWithoutProperties = function (obj, keys) {
-  var target = {};
+'use strict';
 
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
-  }
+var _objectWithoutProperties = function (obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; };
 
-  return target;
-};
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var React = require("react");
-var utils = require("./utils");
-var responsiveUtils = require("./responsiveUtils");
-var PureDeepRenderMixin = require("./mixins/PureDeepRenderMixin");
-var WidthListeningMixin = require("./mixins/WidthListeningMixin");
-var ReactGridLayout = require("./ReactGridLayout");
+var React = require('react');
+var utils = require('./utils');
+var responsiveUtils = require('./responsiveUtils');
+var PureDeepRenderMixin = require('./mixins/PureDeepRenderMixin');
+var WidthListeningMixin = require('./mixins/WidthListeningMixin');
+var ReactGridLayout = require('./ReactGridLayout');
 
 /**
  * A wrapper around ReactGridLayout to support responsive breakpoints.
  */
 var ResponsiveReactGridLayout = React.createClass({
-  displayName: "ResponsiveReactGridLayout",
+  displayName: 'ResponsiveReactGridLayout',
+
   mixins: [PureDeepRenderMixin, WidthListeningMixin],
 
   propTypes: {
@@ -42,12 +36,12 @@ var ResponsiveReactGridLayout = React.createClass({
 
     // layouts is an object mapping breakpoints to layouts.
     // e.g. {lg: Layout, md: Layout, ...}
-    layouts: function (props, propName, componentName) {
+    layouts: function layouts(props, propName, componentName) {
       React.PropTypes.object.isRequired.apply(this, arguments);
 
       var layouts = props.layouts;
       Object.keys(layouts).map(function (k) {
-        utils.validateLayout(layouts[k], "layouts." + k);
+        utils.validateLayout(layouts[k], 'layouts.' + k);
       });
     },
 
@@ -68,8 +62,8 @@ var ResponsiveReactGridLayout = React.createClass({
       breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
       cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
       layouts: {},
-      onBreakpointChange: function () {},
-      onLayoutChange: function () {}
+      onBreakpointChange: function onBreakpointChange() {},
+      onLayoutChange: function onLayoutChange() {}
     };
   },
 
@@ -136,6 +130,7 @@ var ResponsiveReactGridLayout = React.createClass({
 
     // Breakpoint change
     if (newState.cols !== this.state.cols) {
+
       // Store the current layout
       newState.layouts = this.state.layouts;
       newState.layouts[this.state.breakpoint] = JSON.parse(JSON.stringify(this.state.layout));
@@ -155,18 +150,19 @@ var ResponsiveReactGridLayout = React.createClass({
     this.setState(newState);
   },
 
-
   render: function render() {
     // Don't pass responsive props to RGL.
     /*jshint unused:false*/
-    var layouts = this.props.layouts;
-    var onBreakpointChange = this.props.onBreakpointChange;
-    var breakpoints = this.props.breakpoints;
-    var props = _objectWithoutProperties(this.props, ["layouts", "onBreakpointChange", "breakpoints"]);
+    var _props = this.props;
+    var layouts = _props.layouts;
+    var onBreakpointChange = _props.onBreakpointChange;
+    var breakpoints = _props.breakpoints;
+
+    var props = _objectWithoutProperties(_props, ['layouts', 'onBreakpointChange', 'breakpoints']);
 
     return React.createElement(
       ReactGridLayout,
-      React.__spread({}, props, {
+      _extends({}, props, {
         layout: this.state.layout,
         cols: this.state.cols,
         listenToWindowResize: false,
