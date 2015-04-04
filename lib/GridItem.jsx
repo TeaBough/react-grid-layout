@@ -13,6 +13,9 @@ var GridItem = React.createClass({
   mixins: [PureDeepRenderMixin],
 
   propTypes: {
+    // Children must be only a single element
+    children: React.PropTypes.element,
+
     // General grid attributes
     cols: React.PropTypes.number.isRequired,
     rows: React.PropTypes.number.isRequired,
@@ -276,7 +279,7 @@ var GridItem = React.createClass({
       style["height"] = pos.height + "px";
     }
 
-    var child = cloneWithProps(React.Children.only(this.props.children), {
+    var child = cloneWithProps(this.props.children, {
       // Munge a classname. Use passed in classnames and resizing.
       // React with merge the classNames.
       className: ['react-grid-item', this.props.className, this.state.resizing ? 'resizing' : '',
