@@ -130,6 +130,7 @@ var ReactGridLayout = React.createClass({
 			layout: utils.synchronizeLayoutWithChildren(this.props.layout, this.props.children, this.props.cols, this.props.rows, this.props.verticalCompact),
 			width: this.props.colWidth * this.props.cols,
 			height: this.props.rowHeight * this.props.rows,
+			isMounted: false,
 			collisions:[],
 			activeDrag: null
 		};
@@ -418,8 +419,8 @@ var ReactGridLayout = React.createClass({
 				onResizeStop={this.onResizeStop}
 				isDraggable={draggable}
 				isResizable={resizable}
-				useCSSTransforms={this.props.useCSSTransforms && this.isMounted()}
-				usePercentages={!this.isMounted()}
+				useCSSTransforms={this.props.useCSSTransforms && this.state.isMounted}
+				usePercentages={!this.state.isMounted}
 				{...l}
 				>
 				{child}

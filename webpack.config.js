@@ -1,50 +1,43 @@
 'use strict';
 var webpack = require('webpack');
-var fs = require('fs');
 
-// Builds example bundles
+// Builds bundle usable <script>. Includes RGL and all deps, excluding React.
 module.exports = {
     context: __dirname,
     entry: {
-      commons: ["lodash"],
+      'react-grid-layout': './index-dev.js'
     },
     output: {
-        path: __dirname + "/dist",
-        filename: "[name].bundle.js",
-        sourceMapFilename: "[file].map",
+      path: __dirname + "/dist",
+      filename: "[name].min.js",
+      libraryTarget: "umd",
+      library: "ReactGridLayout"
+    },
+    devtool: 'source-map',
+    externals: {
+      // React dep should be available as window.React
+      "react": "React",
+      "react/addons": "React"
     },
     module: {
       loaders: [
-        {test: /\.jsx?$/, exclude: /node_modules/, loader: '6to5-loader?experimental=true&runtime=true'}
+        {test: /\.jsx?$/, exclude: /node_modules/, loader: 'babel-loader?stage=0'}
       ]
     },
     plugins: [
       new webpack.DefinePlugin({
         "process.env": {
-          NODE_ENV: JSON.stringify('development')
+          NODE_ENV: JSON.stringify('production')
         }
       }),
-      new webpack.optimize.CommonsChunkPlugin(
-        "commons", "commons.js"),
       new webpack.optimize.OccurenceOrderPlugin(),
       new webpack.optimize.DedupePlugin(),
-      new webpack.ProvidePlugin({
-        to5Runtime: "imports?global=>{}!exports-loader?global.to5Runtime!6to5/runtime"
-      })
+      // See #40 - duplicated React modules don't play nice
+      new webpack.NormalModuleReplacementPlugin(/\/react\/lib\/cloneWithProps/, '../../react-clonewithprops/index.js'),
+      // Compress, but don't print warnings to console
+      new webpack.optimize.UglifyJsPlugin({compress: {warnings: false}})
     ],
     resolve: {
-      extensions: ["", ".webpack.js", ".web.js", ".js", ".jsx"],
-      alias: {'react-grid-layout': __dirname + '/index-dev.js'}
+      extensions: ["", ".webpack.js", ".web.js", ".js", ".jsx"]
     }
 };
-
-// Load all entry points
-var files = fs.readdirSync(__dirname + '/test/examples').filter(function(element, index, array){
-    return element.match(/^.+\.jsx$/);
-});
-
-for(var idx in files){
-    var file = files[idx];
-    var module_name = file.replace(/\.jsx$/,'');
-    module.exports.entry[module_name] = './test/examples/' + file;
-}

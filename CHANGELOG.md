@@ -1,3 +1,18 @@
+0.8.1
+-----
+
+- Fixed React 0.13 warning about `isMounted()`.
+- Update to babel 5.
+- Added browser build for use with a `<script>` tag or in RequireJS builds.
+- Pinned react-draggable version in anticipation of React 0.13 update.
+
+0.8.0
+-----
+
+- Changed signature on resize/drag callbacks to allow dynamic max/min W/H per item.
+- Fixed bug in `useCSSTransforms`.
+- Documentation and example fixes.
+
 0.7.1
 -----
 

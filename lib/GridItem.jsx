@@ -13,13 +13,16 @@ var GridItem = React.createClass({
   mixins: [PureDeepRenderMixin],
 
   propTypes: {
+    // Children must be only a single element
+    children: React.PropTypes.element,
+
     // General grid attributes
     cols: React.PropTypes.number.isRequired,
     rows: React.PropTypes.number.isRequired,
     rowHeight: React.PropTypes.number.isRequired,
     colWidth: React.PropTypes.number.isRequired,
     margin: React.PropTypes.array.isRequired,
-    
+
     // These are all in grid units
     x: React.PropTypes.number.isRequired,
     y: React.PropTypes.number.isRequired,
@@ -49,7 +52,7 @@ var GridItem = React.createClass({
 
     // If true, item will be repositioned when x/y/w/h change
     moveOnStartChange: React.PropTypes.bool,
-    
+
     // Functions
     onDragStop: React.PropTypes.func,
     onDragStart: React.PropTypes.func,
@@ -151,6 +154,42 @@ var GridItem = React.createClass({
   },
 
   /**
+   * This is where we set the grid item's absolute placement. It gets a little tricky because we want to do it
+   * well when server rendering, and the only way to do that properly is to use percentage width/left because
+   * we don't know exactly what the browser viewport is.
+   * Unfortunately, CSS Transforms, which are great for performance, break in this instance because a percentage
+   * left is relative to the item itself, not its container! So we cannot use them on the server rendering pass.
+   *
+   * @param  {Object} pos Position object with width, height, left, top.
+   * @return {Object}     Style object.
+   */
+  createStyle(pos) {
+    var style = {
+      width: pos.width + 'px',
+      height: pos.height + 'px',
+      left: pos.left + 'px',
+      top: pos.top + 'px',
+      position: 'absolute'
+    };
+
+    // This is used for server rendering.
+    if (this.props.usePercentages) {
+      pos.left = utils.perc(pos.left / this.props.containerWidth);
+      style.left = pos.left;
+      style.width = utils.perc(pos.width / this.props.containerWidth);
+    }
+
+    // CSS Transforms support
+    if (this.props.useCSSTransforms) {
+      utils.setTransform(style, [pos.left, pos.top]);
+      delete style.left;
+      delete style.top;
+    }
+
+    return style;
+  },
+
+  /**
    * Mix a Draggable instance into a child.
    * @param  {Element} child    Child element.
    * @param  {Object} position  Position object (pixel values)
@@ -160,7 +199,7 @@ var GridItem = React.createClass({
     return (
       <Draggable
         start={{x: position.left, y: position.top}}
-        moveOnStartChange={this.props.moveOnStartChange} 
+        moveOnStartChange={this.props.moveOnStartChange}
         onStop={this.onDragHandler('onDragStop')}
         onStart={this.onDragHandler('onDragStart')}
         onDrag={this.onDragHandler('onDrag')}
@@ -187,7 +226,7 @@ var GridItem = React.createClass({
     // Calculate min/max constraints using our min & maxes
     var mins = this.calcPosition(0, 0, p.minW, p.minH);
     var maxes = this.calcPosition(0, 0, p.maxW, p.maxH);
-    var minConstraints = [mins.width, mins.height]; 
+    var minConstraints = [mins.width, mins.height];
     var maxConstraints = [Math.min(maxes.width, maxWidth), Math.min(maxes.height, Infinity)];
     return (
       <Resizable
@@ -206,9 +245,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -229,9 +268,9 @@ var GridItem = React.createClass({
 
   /**
    * Wrapper around drag events to provide more useful data.
-   * All drag events call the function with the given handler name, 
+   * All drag events call the function with the given handler name,
    * with the signature (index, x, y).
-   * 
+   *
    * @param  {String} handlerName Handler name to wrap.
    * @return {Function}           Handler function.
    */
@@ -276,35 +315,17 @@ var GridItem = React.createClass({
       style["height"] = pos.height + "px";
     }
 
-    var child = cloneWithProps(React.Children.only(this.props.children), {
+    // Create the child element. We clone the existing element but modify its className and style.
+    var child = cloneWithProps(this.props.children, {
       // Munge a classname. Use passed in classnames and resizing.
       // React with merge the classNames.
       className: ['react-grid-item', this.props.className, this.state.resizing ? 'resizing' : '',
-        this.props.useCSSTransforms ? 'cssTransforms' : ''].join(' '),style
+        this.props.useCSSTransforms ? 'cssTransforms' : ''].join(' '),
+      // We can set the width and height on the child, but unfortunately we can't set the position.
+      style: this.createStyle(pos)
     });
 
-    // This is where we set the grid item's absolute placement. It gets a little tricky because we want to do it
-    // well when server rendering, and the only way to do that properly is to use percentage width/left because
-    // we don't know exactly what the browser viewport is.
-    //
-    // Unfortunately, CSS Transforms, which are great for performance, break in this instance because a percentage
-    // left is relative to the item itself, not its container! So we cannot use them on the server rendering pass.
-
-    // This is used for server rendering.
-    if (this.props.usePercentages) {
-      pos.left = utils.perc(pos.left / p.containerWidth);
-      child.props.style.left = pos.left;
-      child.props.style.width = utils.perc(pos.width / p.containerWidth);
-    }
-
-    // CSS Transforms support
-    if (this.props.useCSSTransforms) {
-      utils.setTransform(child.props.style, [pos.left, pos.top]);
-      delete child.props.style.left;
-      delete child.props.style.top;
-    }
-
-    // Resizable support. This is usually on but the user can toggle it off. 
+    // Resizable support. This is usually on but the user can toggle it off.
     if (this.props.isResizable) {
       child = this.mixinResizable(child, pos);
     }
@@ -312,7 +333,7 @@ var GridItem = React.createClass({
     // Draggable support. This is always on, except for with placeholders.
     if (this.props.isDraggable) {
       child = this.mixinDraggable(child, pos);
-    } 
+    }
 
     return child;
   }
@@ -320,7 +341,7 @@ var GridItem = React.createClass({
 
 function constraintError(name, props) {
   delete props.children;
-  throw new Error(name + ' overrides contraints on gridItem ' + props.i + '. Full props: ' + JSON.stringify(props)); 
+  throw new Error(name + ' overrides contraints on gridItem ' + props.i + '. Full props: ' + JSON.stringify(props));
 }
 
 module.exports = GridItem;
