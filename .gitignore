@@ -3,8 +3,5 @@ dist/*
 !dist/react-grid-layout.min*
 !dist/*.html
 npm-debug.log
-<<<<<<< HEAD
 *.iml
-=======
 build/
->>>>>>> upstream/master
